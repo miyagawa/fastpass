@@ -22,7 +22,6 @@ our $STDERR_BUFFER_SIZE = 0;
 sub new {
     my($class, %options) = @_;
     bless {
-        workers => 5,
         %options,
         # FIXME
         values => {

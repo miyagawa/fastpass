@@ -14,7 +14,8 @@ fastpass - Lightweight FastCGI daemon that works like Unicorn
 
 =head1 SYNOPSIS
 
-  fastpass --listen /tmp/fcgi.sock --worker 10 myapp.psgi
+  fastpass --listen /tmp/fcgi.sock --workers 10 myapp.psgi
+  fastpass --listen :9000
 
 =head1 OPTIONS
 

@@ -11,7 +11,9 @@ use Getopt::Long ();
 sub new {
     my $class = shift;
     bless {
-        options  => {},
+        options  => {
+            workers => 5,
+        },
     }, $class;
 }
 
@@ -21,6 +23,7 @@ sub parse_options {
     Getopt::Long::GetOptionsFromArray(
         \@args,
         "listen=s",     \$self->{options}{listen},
+        "workers=i",    \$self->{options}{workers},
         "a|app=s",      \$self->{app},
         "h|help",       sub { $self->show_help; exit(0) },
         "v|version",    sub { print "fastpass $VERSION\n"; exit(0) },
@@ -78,7 +81,7 @@ Fastpass - FastCGI daemon for PSGI apps
 
 =head1 SYNOPSIS
 
-  fastpass myapp.psgi
+  fastpass --listen :8080 --workers 24 myapp.psgi
 
 =head1 DESCRIPTION
 
