@@ -1,9 +1,7 @@
 use inc::Module::Install;
 all_from 'lib/Fastpass.pm';
 readme_from('lib/Fastpass.pm');
-requires 'version', 0.77;
 requires 'Net::FastCGI', 0.13;
-requires 'parent';
 requires 'Net::Server';
 build_requires 'Test::More', 0.88;
 test_requires 'Test::Requires';

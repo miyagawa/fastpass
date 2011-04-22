@@ -1,7 +1,7 @@
 package Fastpass::Server;
 use strict;
 use warnings;
-use parent qw(Net::Server::PreForkSimple);
+use base qw(Net::Server::PreForkSimple);
 use constant DEBUG => $ENV{PERL_FASTPASS_DEBUG};
 
 use Carp ();
