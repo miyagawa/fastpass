@@ -1,0 +1,31 @@
+NAME
+    Fastpass - FastCGI daemon for PSGI apps
+
+SYNOPSIS
+      fastpass myapp.psgi
+
+DESCRIPTION
+    Fastpass is a standalone FastCGI daemon that is designed to work out of
+    the box with nginx HTTP server. The supported feature set is close to
+    Unicorn <http://unicorn.bogomips.org/> and Starman i.e. preforking, TCP
+    and UNIX domain socket support and PSGI compatible, but Fastpass works
+    with the FastCGI protocol instead of HTTP.
+
+CONFIGURATIONS
+    TBD
+
+AUTHOR
+    Tatsuhiko Miyagawa <miyagawa@bulknews.net>
+
+    Christian Hansen
+
+COPYRIGHT
+    Copyright 2011- Tatsuhiko Miyagawa
+
+LICENSE
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+SEE ALSO
+    Plack::Handler::FCGI, FCGI, Net::FastCGI
+

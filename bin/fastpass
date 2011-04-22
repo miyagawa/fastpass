@@ -1,0 +1,32 @@
+#!perl
+use strict;
+use Fastpass;
+
+my $cli = Fastpass->new;
+$cli->parse_options(@ARGV);
+$cli->run;
+
+__END__
+
+=head1 NAME
+
+fastpass - Lightweight FastCGI daemon that works like Unicorn
+
+=head1 SYNOPSIS
+
+  fastpass --listen /tmp/fcgi.sock --worker 10 myapp.psgi
+
+=head1 OPTIONS
+
+TBD
+
+=head1 AUTHOR
+
+Tatsuhiko Miyagawa
+
+=head1 SEE ALSO
+
+L<Fastpass>
+
+=cut
+
