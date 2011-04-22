@@ -40,7 +40,7 @@ sub run {
     $self->{app} = $app;
 
     my($host, $port, $proto);
-    if ($listen =~ /:\d+$/) {
+    if ($listen && $listen =~ /:\d+$/) {
         ($host, $port) = split /:/, $listen, 2;
         $host ||= "*";
         $proto = 'tcp';

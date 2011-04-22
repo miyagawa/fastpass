@@ -44,10 +44,11 @@ HELP
 
 sub _load_app {
     my $_file = shift;
-    local $ENV{PLACK_ENV} = 'deployment';
+    local $ENV{PLACK_ENV} = $ENV{PLACK_ENV} || 'deployment';
     local $0 = $_file;
     local @ARGV = (); # Dancer
-    eval 'package Fastpass::App::Sandbox; my $app = do $_file';
+    package main;
+    return do $_file;
 }
 
 sub run {
@@ -57,11 +58,13 @@ sub run {
     my $app  = _load_app($file);
 
     unless (ref $app eq 'CODE') {
-        no warnings 'uninitialized';
-        die <<DIE;
-The application ($app) is not a PSGI application.
-The error opening file '$file' was: $!
-DIE
+        $app = 'undef' unless defined $app;
+        chomp(my $err = $@ || $!);
+        my $msg = "The application ($app) is not a PSGI application.\n";
+        if ($err) {
+            $msg .= "The error opening file '$file' was:\n$err\n";
+        }
+        die $msg;
     }
 
     my $server = Fastpass::Server->new(%{$self->{options}});
