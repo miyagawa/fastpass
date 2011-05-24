@@ -3,6 +3,7 @@ all_from 'lib/Fastpass.pm';
 readme_from('lib/Fastpass.pm');
 requires 'Net::FastCGI', 0.13;
 requires 'Net::Server';
+install_script 'bin/fastpass';
 build_requires 'Test::More', 0.88;
 test_requires 'Test::Requires';
 auto_set_repository();
