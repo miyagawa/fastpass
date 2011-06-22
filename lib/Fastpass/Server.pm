@@ -178,6 +178,7 @@ sub handle_request {
         'psgi.streaming'    => 1,
         'psgi.nonblocking'  => 0,
         'psgix.input.buffered' => 1,
+        'psgix.harakiri'    => 1,
     };
 
     delete $env->{HTTP_CONTENT_TYPE};
@@ -193,6 +194,11 @@ sub handle_request {
         });
     } else {
         die "Bad response $res";
+    }
+
+    if ($env->{'psgix.harakiri.commit'}) {
+        $self->{client}{keep_conn} = 0;
+        $self->{client}{harakiri}  = 1;
     }
 }
 
@@ -227,6 +233,16 @@ sub _handle_response {
         return Fastpass::Writer->new($stdout);
     }
 }
+
+sub post_client_connection_hook {
+    my $self = shift;
+
+    if ($self->{client}{harakiri}) {
+        warn "Committing harakiri ($$)\n" if DEBUG;
+        exit(0);
+    }
+}
+
 
 1;
 
