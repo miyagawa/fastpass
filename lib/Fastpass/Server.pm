@@ -68,20 +68,25 @@ sub run {
     );
 }
 
+sub post_accept_hook {
+    my $self = shift;
+
+    $self->{client} = {
+        current_id => 0,     # id of the request we're processing
+        stdin      => undef, # buffer for STDIN
+        params     => undef, # buffer for parameters
+        done       => 0,     # done with connection?
+        keep_conn  => 0,     # more requests on this connection?
+    };
+}
+
 sub process_request {
     my $self = shift;
 
     my $socket = $self->{server}{client};
+    my $client = $self->{client};
 
-    my ( $current_id,  # id of the request we are currently processing
-         $stdin,       # buffer for stdin
-         $params,      # buffer for params (environ)
-         $done,        # done with connection?
-         $keep_conn ); # more requests on this connection?
-
-    ($current_id, $stdin) = (0, undef);
-
-    while (!$done) {
+    while (!$client->{done}) {
         my ($type, $request_id, $content) = read_record($socket)
           or last;
 
@@ -103,51 +108,53 @@ sub process_request {
                     FCGI_NULL_REQUEST_ID, build_unknown_type($type));
             }
         }
-        elsif ($request_id != $current_id && $type != FCGI_BEGIN_REQUEST) {
+        elsif ($request_id != $client->{current_id} && $type != FCGI_BEGIN_REQUEST) {
             # ignore inactive requests (FastCGI Specification 3.3)
         }
         elsif ($type == FCGI_ABORT_REQUEST) {
-            $current_id = 0;
-            ($stdin, $params) = (undef, '');
+            $client->{current_id} = 0;
+            $client->{stdin}  = undef;
+            $client->{params} = '';
         }
         elsif ($type == FCGI_BEGIN_REQUEST) {
             my ($role, $flags) = parse_begin_request_body($content);
-            if ($current_id or $role != FCGI_RESPONDER) {
-                my $status = $current_id ? FCGI_CANT_MPX_CONN : FCGI_UNKNOWN_ROLE;
+            if ($client->{current_id} or $role != FCGI_RESPONDER) {
+                my $status = $client->{current_id} ? FCGI_CANT_MPX_CONN : FCGI_UNKNOWN_ROLE;
                 write_record($socket, FCGI_END_REQUEST, $request_id,
                     build_end_request_body(0, $status));
             }
             else {
-                $current_id = $request_id;
-                $stdin      = '';
-                $keep_conn  = ($flags & FCGI_KEEP_CONN);
+                $client->{current_id} = $request_id;
+                $client->{stdin}      = '';
+                $client->{keep_conn}  = ($flags & FCGI_KEEP_CONN);
             }
         }
         elsif ($type == FCGI_PARAMS) {
-            $params .= $content;
+            $client->{params} .= $content;
         }
         elsif ($type == FCGI_STDIN) {
-            $stdin .= $content;
+            $client->{stdin} .= $content;
 
             unless (length $content) {
-                open my $in, "<", \$stdin;
+                open my $in, "<", \$client->{stdin};
 
-                my $out = Fastpass::IO->new($socket, FCGI_STDOUT, $current_id, $STDOUT_BUFFER_SIZE);
-                my $err = Fastpass::IO->new($socket, FCGI_STDERR, $current_id, $STDERR_BUFFER_SIZE);
+                my $out = Fastpass::IO->new($socket, FCGI_STDOUT, $client->{current_id}, $STDOUT_BUFFER_SIZE);
+                my $err = Fastpass::IO->new($socket, FCGI_STDERR, $client->{current_id}, $STDERR_BUFFER_SIZE);
 
-                $self->handle_request(parse_params($params), $in, $out, $err);
+                $self->handle_request(parse_params($client->{params}), $in, $out, $err);
 
                 $out->flush;
                 $err->flush;
 
-                write_record($socket, FCGI_END_REQUEST, $current_id,
+                write_record($socket, FCGI_END_REQUEST, $client->{current_id},
                     build_end_request_body(0, FCGI_REQUEST_COMPLETE));
 
                 # prepare for next request
-                $current_id = 0;
-                ($stdin, $params) = (undef, '');
+                $client->{current_id} = 0;
+                $client->{stdin}      = undef;
+                $client->{params}     = '';
 
-                last unless $keep_conn;
+                last unless $client->{keep_conn};
             }
         }
         else {
@@ -170,6 +177,7 @@ sub handle_request {
         'psgi.run_once'     => 0,
         'psgi.streaming'    => 1,
         'psgi.nonblocking'  => 0,
+        'psgix.input.buffered' => 1,
     };
 
     delete $env->{HTTP_CONTENT_TYPE};
