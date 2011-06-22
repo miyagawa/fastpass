@@ -5,7 +5,7 @@ use Fastpass::Server;
 sub new {
     my $class = shift;
     bless {
-        fastpass => Fastpass::Server->new(@_),
+        fastpass => Fastpass::Server->new(workers => 5, @_),
     }, $class;
 }
 
